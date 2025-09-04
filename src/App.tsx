@@ -3,72 +3,165 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import MainLayout from "./components/layout/MainLayout";
+import PublicHome from "./pages/PublicHome";
 import Dashboard from "./pages/Dashboard";
+import UserDashboard from "./components/dashboards/UserDashboard";
+import CommunityHeadDashboard from "./components/dashboards/CommunityHeadDashboard";
+import BrokerDashboard from "./components/dashboards/BrokerDashboard";
 import PropertyMapPage from "./pages/PropertyMap";
 import AddProperty from "./pages/AddProperty";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import PublicHeader from "./components/layout/PublicHeader";
 
 const queryClient = new QueryClient();
+
+// Dashboard component that renders based on user role
+const RoleBasedDashboard = () => {
+  const { user } = useAuth();
+  
+  if (!user) return <Dashboard />; // Fallback to default dashboard
+  
+  switch (user.role) {
+    case 'user':
+      return <UserDashboard />;
+    case 'owner':
+      return <Dashboard />; // Property owner dashboard (existing)
+    case 'community':
+      return <CommunityHeadDashboard />;
+    case 'broker':
+      return <BrokerDashboard />;
+    default:
+      return <Dashboard />;
+  }
+};
+
+// Protected route wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+  
+  if (!isAuthenticated) {
+    return <Auth />;
+  }
+  
+  return <>{children}</>;
+};
+
+const AppContent = () => {
+  const { isAuthenticated } = useAuth();
+  
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={
+        isAuthenticated ? (
+          <MainLayout>
+            <RoleBasedDashboard />
+          </MainLayout>
+        ) : (
+          <div>
+            <PublicHeader />
+            <PublicHome />
+          </div>
+        )
+      } />
+      
+      <Route path="/auth" element={<Auth />} />
+      
+      {/* Protected routes */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <RoleBasedDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/map" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PropertyMapPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/properties/add" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <AddProperty />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/properties" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <RoleBasedDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/verification" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <RoleBasedDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/transfers" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <RoleBasedDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/commissions" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <RoleBasedDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/community" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <RoleBasedDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <RoleBasedDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          } />
-          <Route path="/map" element={
-            <MainLayout>
-              <PropertyMapPage />
-            </MainLayout>
-          } />
-          <Route path="/properties/add" element={
-            <MainLayout>
-              <AddProperty />
-            </MainLayout>
-          } />
-          <Route path="/properties" element={
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          } />
-          <Route path="/verification" element={
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          } />
-          <Route path="/transfers" element={
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          } />
-          <Route path="/commissions" element={
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          } />
-          <Route path="/community" element={
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          } />
-          <Route path="/settings" element={
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          } />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

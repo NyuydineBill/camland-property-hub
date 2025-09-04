@@ -1,4 +1,5 @@
-import { MapPin, Bell, User, Search, Menu } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { MapPin, Bell, User, Search, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,17 @@ interface HeaderProps {
 }
 
 const Header = ({ onMenuToggle }: HeaderProps) => {
+  const { user, logout } = useAuth();
+
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'owner': return 'Property Owner';
+      case 'community': return 'Community Head';
+      case 'broker': return 'Real Estate Broker';
+      default: return 'User Account';
+    }
+  };
+
   return (
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 sticky top-0 z-50 backdrop-blur-sm bg-card/95">
       <div className="flex items-center gap-4">
@@ -63,7 +75,10 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
               <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
                 <User className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="hidden sm:block text-sm font-medium">John Doe</span>
+              <div className="hidden sm:block text-left">
+                <span className="text-sm font-medium block">{user?.name}</span>
+                <span className="text-xs text-muted-foreground">{getRoleDisplayName(user?.role || '')}</span>
+              </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -71,10 +86,17 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile Settings</DropdownMenuItem>
             <DropdownMenuItem>My Properties</DropdownMenuItem>
-            <DropdownMenuItem>Verification Status</DropdownMenuItem>
+            <DropdownMenuItem>
+              Verification Status
+              {user?.verified && <Badge className="ml-auto h-4 text-xs bg-success text-white">Verified</Badge>}
+            </DropdownMenuItem>
             <DropdownMenuItem>Billing</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem 
+              className="text-destructive focus:text-destructive"
+              onClick={logout}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
               Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
