@@ -124,8 +124,17 @@ const PublicPropertyMap = () => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // For demo purposes, using a placeholder token message
-    console.log('Mapbox integration ready - Add your Mapbox token to enable full functionality');
+    // ADD YOUR MAPBOX TOKEN HERE - Get it from https://mapbox.com/
+    const MAPBOX_TOKEN = ""; // Paste your Mapbox public token here (starts with pk.)
+    
+    if (!MAPBOX_TOKEN) {
+      console.warn('Mapbox token is required. Get your free token at https://mapbox.com/');
+      // Show fallback message instead of initializing map
+      return;
+    }
+
+    // Set the access token
+    mapboxgl.accessToken = MAPBOX_TOKEN;
 
     // Initialize map centered on Cameroon
     map.current = new mapboxgl.Map({
@@ -240,7 +249,28 @@ const PublicPropertyMap = () => {
 
       <div className="flex-1 relative">
         {/* Map Container */}
-        <div ref={mapContainer} className="absolute inset-0" />
+        <div ref={mapContainer} className="absolute inset-0">
+          {/* Fallback content when Mapbox token is not provided */}
+          <div className="absolute inset-0 bg-muted/20 flex items-center justify-center">
+            <Card className="p-8 max-w-md mx-4 text-center">
+              <CardContent>
+                <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Interactive Map Coming Soon</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  To enable the interactive property map, add your free Mapbox token.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => window.open('https://mapbox.com/', '_blank')}
+                >
+                  Get Free Mapbox Token
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {/* Property Details Panel */}
         {selectedProperty && (
