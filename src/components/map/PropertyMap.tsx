@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Icon, divIcon } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +14,7 @@ import {
   UtensilsCrossed,
   AlertTriangle,
   Filter,
-  Search,
-  ArrowRight
+  Search
 } from "lucide-react";
 
 interface Property {
@@ -33,7 +33,7 @@ const mockProperties: Property[] = [
     type: "private",
     title: "Family Residence",
     location: "Bamenda, NW Region",
-    coordinates: [10.1578, 6.1926],
+    coordinates: [6.1926, 10.1578],
     status: "Private Property"
   },
   {
@@ -41,7 +41,7 @@ const mockProperties: Property[] = [
     type: "sale",
     title: "Modern Villa",
     location: "Limbe, SW Region", 
-    coordinates: [9.2145, 4.0156],
+    coordinates: [4.0156, 9.2145],
     price: "45,000,000 FCFA",
     status: "For Sale"
   },
@@ -50,21 +50,11 @@ const mockProperties: Property[] = [
     type: "hotel",
     title: "Mountain View Hotel",
     location: "Buea, SW Region",
-    coordinates: [9.2924, 4.1563],
+    coordinates: [4.1563, 9.2924],
     price: "15,000 FCFA/night",
     status: "Hotel"
   }
 ];
-
-const propertyIcons = {
-  private: Home,
-  state: Building,
-  rent: Home,
-  sale: Home,
-  hotel: Hotel,
-  eatery: UtensilsCrossed,
-  conflict: AlertTriangle,
-};
 
 const propertyColors = {
   private: '#22C55E',
@@ -76,73 +66,41 @@ const propertyColors = {
   conflict: '#EF4444',
 };
 
+const createCustomIcon = (type: Property['type']) => {
+  const color = propertyColors[type];
+  const iconHtml = type === 'private' || type === 'sale' || type === 'rent' 
+    ? '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>'
+    : type === 'hotel' 
+    ? '<path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/>'
+    : '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>';
+
+  return divIcon({
+    html: `
+      <div style="
+        width: 30px; 
+        height: 30px; 
+        border-radius: 50%; 
+        background-color: ${color}; 
+        border: 3px solid white; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      ">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          ${iconHtml}
+        </svg>
+      </div>
+    `,
+    className: 'custom-marker',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+};
+
 const PropertyMap = () => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    // ADD YOUR MAPBOX TOKEN HERE - Get it from https://mapbox.com/
-    const MAPBOX_TOKEN = ""; // Paste your Mapbox public token here (starts with pk.)
-    
-    if (!MAPBOX_TOKEN) {
-      console.warn('Mapbox token is required. Get your free token at https://mapbox.com/');
-      // Show fallback message instead of initializing map
-      return;
-    }
-
-    // Set the access token
-    mapboxgl.accessToken = MAPBOX_TOKEN;
-
-    // Initialize map centered on Cameroon
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v11', 
-      center: [12.3547, 3.8480], // Cameroon center
-      zoom: 6,
-    });
-
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    // Add property markers
-    mockProperties.forEach((property) => {
-      const markerDiv = document.createElement('div');
-      markerDiv.className = 'custom-marker';
-      markerDiv.style.width = '30px';
-      markerDiv.style.height = '30px';
-      markerDiv.style.borderRadius = '50%';
-      markerDiv.style.backgroundColor = propertyColors[property.type];
-      markerDiv.style.border = '3px solid white';
-      markerDiv.style.cursor = 'pointer';
-      markerDiv.style.display = 'flex';
-      markerDiv.style.alignItems = 'center';
-      markerDiv.style.justifyContent = 'center';
-      markerDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-
-      const IconComponent = propertyIcons[property.type];
-      markerDiv.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-        ${property.type === 'private' ? '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>' :
-          property.type === 'hotel' ? '<path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/>' :
-          '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'}
-      </svg>`;
-
-      const marker = new mapboxgl.Marker(markerDiv)
-        .setLngLat(property.coordinates)
-        .addTo(map.current!);
-
-      markerDiv.addEventListener('click', () => {
-        setSelectedProperty(property);
-      });
-    });
-
-    return () => {
-      map.current?.remove();
-    };
-  }, []);
 
   const filteredProperties = mockProperties.filter(property =>
     property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -198,32 +156,42 @@ const PropertyMap = () => {
 
       <div className="flex-1 relative">
         {/* Map Container */}
-        <div ref={mapContainer} className="absolute inset-0">
-          {/* Fallback content when Mapbox token is not provided */}
-          <div className="absolute inset-0 bg-muted/20 flex items-center justify-center">
-            <Card className="p-8 max-w-md mx-4 text-center">
-              <CardContent>
-                <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Interactive Map Coming Soon</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  To enable the interactive property map, add your free Mapbox token.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="gap-2"
-                  onClick={() => window.open('https://mapbox.com/', '_blank')}
-                >
-                  Get Free Mapbox Token
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="absolute inset-0">
+          <MapContainer
+            center={[3.8480, 12.3547] as [number, number]}
+            zoom={6}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {filteredProperties.map((property) => (
+              <Marker
+                key={property.id}
+                position={property.coordinates}
+                icon={createCustomIcon(property.type)}
+                eventHandlers={{
+                  click: () => setSelectedProperty(property),
+                }}
+              >
+                <Popup>
+                  <div className="p-2">
+                    <h3 className="font-semibold">{property.title}</h3>
+                    <p className="text-sm text-muted-foreground">{property.location}</p>
+                    {property.price && (
+                      <p className="text-sm font-medium text-primary mt-1">{property.price}</p>
+                    )}
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
         </div>
 
         {/* Property Details Panel */}
         {selectedProperty && (
-          <Card className="absolute top-4 left-4 w-80 z-10 shadow-elegant">
+          <Card className="absolute top-4 left-4 w-80 z-[1000] shadow-elegant">
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
                 <div>
@@ -278,7 +246,7 @@ const PropertyMap = () => {
         )}
 
         {/* Properties List - Mobile */}
-        <div className="absolute bottom-0 left-0 right-0 bg-card border-t border-border p-4 md:hidden max-h-48 overflow-y-auto">
+        <div className="absolute bottom-0 left-0 right-0 bg-card border-t border-border p-4 md:hidden max-h-48 overflow-y-auto z-[1000]">
           <h4 className="font-medium mb-2">Properties ({filteredProperties.length})</h4>
           <div className="space-y-2">
             {filteredProperties.slice(0, 3).map((property) => (
