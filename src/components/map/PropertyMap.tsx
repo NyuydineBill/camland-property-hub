@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Icon, divIcon } from 'leaflet';
+import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,15 @@ import {
   Filter,
   Search
 } from "lucide-react";
+
+// Fix Leaflet default icon issue
+import L from 'leaflet';
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 interface Property {
   id: string;
@@ -68,33 +77,18 @@ const propertyColors = {
 
 const createCustomIcon = (type: Property['type']) => {
   const color = propertyColors[type];
-  const iconHtml = type === 'private' || type === 'sale' || type === 'rent' 
-    ? '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>'
-    : type === 'hotel' 
-    ? '<path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/>'
-    : '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>';
+  const svgIcon = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="white" stroke="${color}"/>
+    </svg>
+  `;
 
-  return divIcon({
-    html: `
-      <div style="
-        width: 30px; 
-        height: 30px; 
-        border-radius: 50%; 
-        background-color: ${color}; 
-        border: 3px solid white; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      ">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-          ${iconHtml}
-        </svg>
-      </div>
-    `,
-    className: 'custom-marker',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
+  return new Icon({
+    iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
+    popupAnchor: [0, -24]
   });
 };
 
@@ -158,22 +152,19 @@ const PropertyMap = () => {
         {/* Map Container */}
         <div className="absolute inset-0">
           <MapContainer
-            center={[3.8480, 12.3547] as [number, number]}
+            center={[3.8480, 12.3547]}
             zoom={6}
             style={{ height: '100%', width: '100%' }}
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
             {filteredProperties.map((property) => (
               <Marker
                 key={property.id}
                 position={property.coordinates}
                 icon={createCustomIcon(property.type)}
-                eventHandlers={{
-                  click: () => setSelectedProperty(property),
-                }}
               >
                 <Popup>
                   <div className="p-2">
@@ -182,6 +173,13 @@ const PropertyMap = () => {
                     {property.price && (
                       <p className="text-sm font-medium text-primary mt-1">{property.price}</p>
                     )}
+                    <Button 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => setSelectedProperty(property)}
+                    >
+                      View Details
+                    </Button>
                   </div>
                 </Popup>
               </Marker>
