@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          property_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -41,6 +77,256 @@ export type Database = {
         }
         Relationships: []
       }
+      properties: {
+        Row: {
+          address: string
+          area_sqm: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          electricity: boolean | null
+          featured: boolean | null
+          furnished: boolean | null
+          garden: boolean | null
+          id: string
+          internet: boolean | null
+          latitude: number | null
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          longitude: number | null
+          owner_id: string
+          parking: boolean | null
+          price: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          region: string | null
+          security: boolean | null
+          status: Database["public"]["Enums"]["property_status"]
+          swimming_pool: boolean | null
+          title: string
+          updated_at: string
+          verified: boolean | null
+          views_count: number | null
+          water: boolean | null
+        }
+        Insert: {
+          address: string
+          area_sqm?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          electricity?: boolean | null
+          featured?: boolean | null
+          furnished?: boolean | null
+          garden?: boolean | null
+          id?: string
+          internet?: boolean | null
+          latitude?: number | null
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          longitude?: number | null
+          owner_id: string
+          parking?: boolean | null
+          price: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          region?: string | null
+          security?: boolean | null
+          status?: Database["public"]["Enums"]["property_status"]
+          swimming_pool?: boolean | null
+          title: string
+          updated_at?: string
+          verified?: boolean | null
+          views_count?: number | null
+          water?: boolean | null
+        }
+        Update: {
+          address?: string
+          area_sqm?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          electricity?: boolean | null
+          featured?: boolean | null
+          furnished?: boolean | null
+          garden?: boolean | null
+          id?: string
+          internet?: boolean | null
+          latitude?: number | null
+          listing_type?: Database["public"]["Enums"]["listing_type"]
+          longitude?: number | null
+          owner_id?: string
+          parking?: boolean | null
+          price?: number
+          property_type?: Database["public"]["Enums"]["property_type"]
+          region?: string | null
+          security?: boolean | null
+          status?: Database["public"]["Enums"]["property_status"]
+          swimming_pool?: boolean | null
+          title?: string
+          updated_at?: string
+          verified?: boolean | null
+          views_count?: number | null
+          water?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          is_primary: boolean | null
+          property_id: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          is_primary?: boolean | null
+          property_id: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          is_primary?: boolean | null
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_images_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_inquiries: {
+        Row: {
+          created_at: string
+          id: string
+          inquirer_email: string
+          inquirer_id: string | null
+          inquirer_name: string
+          inquirer_phone: string | null
+          message: string
+          property_id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inquirer_email: string
+          inquirer_id?: string | null
+          inquirer_name: string
+          inquirer_phone?: string | null
+          message: string
+          property_id: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inquirer_email?: string
+          inquirer_id?: string | null
+          inquirer_name?: string
+          inquirer_phone?: string | null
+          message?: string
+          property_id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_inquiries_inquirer_id_fkey"
+            columns: ["inquirer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_inquiries_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          property_id: string
+          rating: number
+          review_text: string | null
+          reviewer_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_id: string
+          rating: number
+          review_text?: string | null
+          reviewer_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_id?: string
+          rating?: number
+          review_text?: string | null
+          reviewer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_reviews_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -49,7 +335,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      listing_type: "rent" | "sale"
+      property_status: "available" | "rented" | "sold" | "pending"
+      property_type:
+        | "apartment"
+        | "house"
+        | "villa"
+        | "land"
+        | "commercial"
+        | "office"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -176,6 +470,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      listing_type: ["rent", "sale"],
+      property_status: ["available", "rented", "sold", "pending"],
+      property_type: [
+        "apartment",
+        "house",
+        "villa",
+        "land",
+        "commercial",
+        "office",
+      ],
+    },
   },
 } as const
