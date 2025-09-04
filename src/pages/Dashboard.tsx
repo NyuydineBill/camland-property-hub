@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import StatsGrid from "@/components/dashboard/StatsGrid";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,27 +15,34 @@ import {
   CheckCircle,
   Clock
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Dashboard = () => {
+  const { user } = useAuth();
   return (
     <div className="p-6 space-y-8">
       {/* Welcome Section */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Welcome back, John!</h1>
+          <h1 className="text-3xl font-bold text-foreground">Welcome back, {user?.name || 'User'}!</h1>
           <p className="text-muted-foreground mt-1">
             Here's what's happening with your properties today.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button className="bg-gradient-primary hover:opacity-90 gap-2">
-            <PlusCircle className="h-4 w-4" />
-            Add Property
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <MapPin className="h-4 w-4" />
-            View Map
-          </Button>
+          <Link to="/properties/add">
+            <Button className="bg-gradient-primary hover:opacity-90 gap-2">
+              <PlusCircle className="h-4 w-4" />
+              Add Property
+            </Button>
+          </Link>
+          <Link to="/map">
+            <Button variant="outline" className="gap-2">
+              <MapPin className="h-4 w-4" />
+              View Map
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -53,16 +61,18 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="ghost" className="w-full justify-start gap-3 h-12">
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Shield className="h-4 w-4 text-primary" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-sm">Verify Property</p>
-                <p className="text-xs text-muted-foreground">Get official verification</p>
-              </div>
-              <ArrowRight className="h-4 w-4 ml-auto text-muted-foreground" />
-            </Button>
+            <Link to="/verification">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-12">
+                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Shield className="h-4 w-4 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-sm">Verify Property</p>
+                  <p className="text-xs text-muted-foreground">Get official verification</p>
+                </div>
+                <ArrowRight className="h-4 w-4 ml-auto text-muted-foreground" />
+              </Button>
+            </Link>
             
             <Button variant="ghost" className="w-full justify-start gap-3 h-12">
               <div className="w-8 h-8 bg-warning/10 rounded-lg flex items-center justify-center">
@@ -75,16 +85,18 @@ const Dashboard = () => {
               <ArrowRight className="h-4 w-4 ml-auto text-muted-foreground" />
             </Button>
             
-            <Button variant="ghost" className="w-full justify-start gap-3 h-12">
-              <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <MapPin className="h-4 w-4 text-blue-500" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-sm">Search Properties</p>
-                <p className="text-xs text-muted-foreground">Explore marketplace</p>
-              </div>
-              <ArrowRight className="h-4 w-4 ml-auto text-muted-foreground" />
-            </Button>
+            <Link to="/properties">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-12">
+                <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                  <MapPin className="h-4 w-4 text-blue-500" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-sm">Search Properties</p>
+                  <p className="text-xs text-muted-foreground">Explore marketplace</p>
+                </div>
+                <ArrowRight className="h-4 w-4 ml-auto text-muted-foreground" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 

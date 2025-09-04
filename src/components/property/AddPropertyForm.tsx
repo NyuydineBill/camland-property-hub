@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, MapPin, FileText, Camera, User } from "lucide-react";
+import { Upload, MapPin, FileText, Camera, User, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const regions = [
   "Adamawa", "Centre", "East", "Far North", "Littoral", 
@@ -29,7 +32,15 @@ const propertyStatus = [
 ];
 
 const AddPropertyForm = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<File[]>([]);
+  const documentInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  
   const [formData, setFormData] = useState({
     // Personal Information
     fullName: "",
@@ -73,9 +84,132 @@ const AddPropertyForm = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log("Property registration submitted:", formData);
-    // Handle form submission
+  const handleFileUpload = (files: FileList | null, type: 'documents' | 'images') => {
+    if (!files) return;
+    
+    const newFiles = Array.from(files);
+    
+    if (type === 'documents') {
+      setUploadedDocuments(prev => [...prev, ...newFiles]);
+    } else {
+      setUploadedImages(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeFile = (index: number, type: 'documents' | 'images') => {
+    if (type === 'documents') {
+      setUploadedDocuments(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const uploadFileToStorage = async (file: File, bucket: string, path: string) => {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(path, file);
+    
+    if (error) throw error;
+    return data;
+  };
+
+  const handleSubmit = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to register a property",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // Create property record
+      const propertyData = {
+        owner_id: user.id,
+        title: formData.fullName + "'s Property", // You can make this more sophisticated
+        city: formData.division,
+        region: formData.region,
+        address: `${formData.quarter}, ${formData.subDivision}, ${formData.division}`,
+        property_type: formData.propertyType.replace(/\s+/g, '_').toLowerCase() as any,
+        listing_type: formData.propertyStatus.includes('sale') ? 'sale' as const : 'rent' as const,
+        status: 'available' as const,
+        price: 0, // You'll need to add price field to form
+        currency: 'XAF',
+        description: formData.description,
+        verified: false
+      };
+
+      const { data: property, error: propertyError } = await supabase
+        .from('properties')
+        .insert(propertyData)
+        .select()
+        .single();
+
+      if (propertyError) throw propertyError;
+
+      // Upload images
+      for (let i = 0; i < uploadedImages.length; i++) {
+        const file = uploadedImages[i];
+        const fileName = `${property.id}/${Date.now()}-${i}.${file.name.split('.').pop()}`;
+        
+        await uploadFileToStorage(file, 'property-images', fileName);
+        
+        // Create image record
+        const { data } = supabase.storage.from('property-images').getPublicUrl(fileName);
+        
+        await supabase.from('property_images').insert({
+          property_id: property.id,
+          image_url: data.publicUrl,
+          alt_text: `Property image ${i + 1}`,
+          display_order: i,
+          is_primary: i === 0
+        });
+      }
+
+      toast({
+        title: "Property registered successfully!",
+        description: "Your property has been registered and is pending verification.",
+      });
+
+      // Reset form
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        idNumber: "",
+        idType: "",
+        region: "",
+        division: "",
+        subDivision: "",
+        quarter: "",
+        propertyType: "",
+        propertyStatus: "",
+        dimensions: "",
+        coordinates: "",
+        description: "",
+        nextOfKinName: "",
+        nextOfKinPhone: "",
+        nextOfKinEmail: "",
+        termsAccepted: false,
+        dataProcessingAccepted: false
+      });
+      setUploadedImages([]);
+      setUploadedDocuments([]);
+      setCurrentStep(1);
+
+    } catch (error) {
+      console.error('Error registering property:', error);
+      toast({
+        title: "Registration failed",
+        description: "There was an error registering your property. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStepContent = () => {
@@ -267,7 +401,18 @@ const AddPropertyForm = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <Label>Property Documents *</Label>
-                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
+                  <input
+                    ref={documentInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => handleFileUpload(e.target.files, 'documents')}
+                    className="hidden"
+                  />
+                  <div 
+                    onClick={() => documentInputRef.current?.click()}
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer"
+                  >
                     <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
                       Drop files here or click to upload
@@ -276,11 +421,39 @@ const AddPropertyForm = () => {
                       PDF, JPG, PNG up to 10MB
                     </p>
                   </div>
+                  {uploadedDocuments.length > 0 && (
+                    <div className="space-y-2">
+                      {uploadedDocuments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                          <span className="text-sm truncate">{file.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(index, 'documents')}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
                   <Label>Property Photos *</Label>
-                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png"
+                    onChange={(e) => handleFileUpload(e.target.files, 'images')}
+                    className="hidden"
+                  />
+                  <div 
+                    onClick={() => imageInputRef.current?.click()}
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer"
+                  >
                     <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
                       Upload property photos
@@ -289,6 +462,28 @@ const AddPropertyForm = () => {
                       JPG, PNG up to 5MB each
                     </p>
                   </div>
+                  {uploadedImages.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {uploadedImages.map((file, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-24 object-cover rounded"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute -top-2 -right-2 w-6 h-6 p-0"
+                            onClick={() => removeFile(index, 'images')}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -428,10 +623,10 @@ const AddPropertyForm = () => {
           {currentStep === totalSteps ? (
             <Button
               onClick={handleSubmit}
-              disabled={!formData.termsAccepted || !formData.dataProcessingAccepted}
+              disabled={!formData.termsAccepted || !formData.dataProcessingAccepted || loading}
               className="bg-gradient-primary hover:opacity-90"
             >
-              Submit Registration
+              {loading ? 'Registering...' : 'Submit Registration'}
             </Button>
           ) : (
             <Button

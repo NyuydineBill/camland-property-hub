@@ -12,6 +12,9 @@ import CommunityHeadDashboard from "./components/dashboards/CommunityHeadDashboa
 import BrokerDashboard from "./components/dashboards/BrokerDashboard";
 import PropertyMapPage from "./pages/PropertyMap";
 import AddProperty from "./pages/AddProperty";
+import Properties from "./pages/Properties";
+import Verification from "./pages/Verification";
+import Transfers from "./pages/Transfers";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import PublicHeader from "./components/layout/PublicHeader";
@@ -102,7 +105,7 @@ const AppContent = () => {
       <Route path="/properties" element={
         <ProtectedRoute>
           <MainLayout>
-            <RoleBasedDashboard />
+            <Properties />
           </MainLayout>
         </ProtectedRoute>
       } />
@@ -110,7 +113,7 @@ const AppContent = () => {
       <Route path="/verification" element={
         <ProtectedRoute>
           <MainLayout>
-            <RoleBasedDashboard />
+            <Verification />
           </MainLayout>
         </ProtectedRoute>
       } />
@@ -118,7 +121,7 @@ const AppContent = () => {
       <Route path="/transfers" element={
         <ProtectedRoute>
           <MainLayout>
-            <RoleBasedDashboard />
+            <Transfers />
           </MainLayout>
         </ProtectedRoute>
       } />
