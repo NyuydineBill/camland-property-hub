@@ -7,6 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Eye, EyeOff, Shield, Building, Users, Briefcase } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const accountTypes = [
   {
@@ -42,6 +45,7 @@ const accountTypes = [
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedAccountType, setSelectedAccountType] = useState("user");
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -50,14 +54,77 @@ const LoginForm = () => {
     confirmPassword: ""
   });
 
-  const handleLogin = (e: React.FormEvent) => {
+  const { login, signup } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", formData);
+    setIsLoading(true);
+    
+    try {
+      await login(formData.email, formData.password);
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+      navigate('/dashboard');
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Sign in failed",
+        description: error instanceof Error ? error.message : "Please check your credentials and try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Registration attempt:", { ...formData, accountType: selectedAccountType });
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Password mismatch",
+        description: "Please make sure your passwords match.",
+      });
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      await signup({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: selectedAccountType as any,
+        phone: formData.phone
+      });
+      
+      toast({
+        title: "Account created!",
+        description: "Please check your email to verify your account.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Sign up failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -133,8 +200,8 @@ const LoginForm = () => {
                     </Button>
                   </div>
 
-                  <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">
-                    Sign In
+                  <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={isLoading}>
+                    {isLoading ? "Signing In..." : "Sign In"}
                   </Button>
                 </form>
               </TabsContent>
@@ -202,47 +269,58 @@ const LoginForm = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="regPhone">Phone Number</Label>
-                    <Input
-                      id="regPhone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      placeholder="+237 6XX XXX XXX"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="regPassword">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="regPassword"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        placeholder="Create a strong password"
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+                   <div className="space-y-2">
+                     <Label htmlFor="regPhone">Phone Number</Label>
+                     <Input
+                       id="regPhone"
+                       value={formData.phone}
+                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                       placeholder="+237 6XX XXX XXX"
+                     />
+                   </div>
+                   
+                   <div className="space-y-2">
+                     <Label htmlFor="regPassword">Password</Label>
+                     <div className="relative">
+                       <Input
+                         id="regPassword"
+                         type={showPassword ? "text" : "password"}
+                         value={formData.password}
+                         onChange={(e) => setFormData({...formData, password: e.target.value})}
+                         placeholder="Create a strong password (min 6 chars)"
+                         required
+                       />
+                       <Button
+                         type="button"
+                         variant="ghost"
+                         size="icon"
+                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                         onClick={() => setShowPassword(!showPassword)}
+                       >
+                         {showPassword ? (
+                           <EyeOff className="h-4 w-4" />
+                         ) : (
+                           <Eye className="h-4 w-4" />
+                         )}
+                       </Button>
+                     </div>
+                   </div>
 
-                  <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">
-                    Create Account
-                  </Button>
+                   <div className="space-y-2">
+                     <Label htmlFor="confirmPassword">Confirm Password</Label>
+                     <Input
+                       id="confirmPassword"
+                       type={showPassword ? "text" : "password"}
+                       value={formData.confirmPassword}
+                       onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                       placeholder="Confirm your password"
+                       required
+                     />
+                   </div>
+
+                   <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={isLoading}>
+                     {isLoading ? "Creating Account..." : "Create Account"}
+                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center">
                     By creating an account, you agree to our Terms of Service and Privacy Policy.

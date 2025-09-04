@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'user' | 'owner' | 'community' | 'broker';
 
@@ -9,100 +11,102 @@ export interface User {
   role: UserRole;
   verified: boolean;
   avatar?: string;
+  phone?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (userData: { name: string; email: string; password: string; role: UserRole }) => Promise<void>;
+  signup: (userData: { name: string; email: string; password: string; role: UserRole; phone?: string }) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration - Replace with Supabase integration
-const mockUsers: Record<string, User & { password: string }> = {
-  'user@example.com': {
-    id: '1',
-    name: 'John User',
-    email: 'user@example.com',
-    password: 'password',
-    role: 'user',
-    verified: true
-  },
-  'owner@example.com': {
-    id: '2',
-    name: 'Jane Owner',
-    email: 'owner@example.com',
-    password: 'password',
-    role: 'owner',
-    verified: true
-  },
-  'community@example.com': {
-    id: '3',
-    name: 'Chief Community',
-    email: 'community@example.com',
-    password: 'password',
-    role: 'community',
-    verified: true
-  },
-  'broker@example.com': {
-    id: '4',
-    name: 'Agent Broker',
-    email: 'broker@example.com',
-    password: 'password',
-    role: 'broker',
-    verified: true
-  }
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user session - Replace with Supabase session check
-    const storedUser = localStorage.getItem('camland_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      
+      if (session?.user) {
+        // Fetch user profile data
+        setTimeout(async () => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile) {
+            setUser({
+              id: session.user.id,
+              name: profile.full_name || session.user.email || '',
+              email: session.user.email || '',
+              role: profile.role as UserRole,
+              verified: !!session.user.email_confirmed_at,
+              phone: profile.phone
+            });
+          }
+        }, 0);
+      } else {
+        setUser(null);
+      }
+      
+      setIsLoading(false);
+    });
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (!session) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    // Mock login - Replace with Supabase authentication
-    const mockUser = mockUsers[email];
-    if (mockUser && mockUser.password === password) {
-      const { password: _, ...userWithoutPassword } = mockUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('camland_user', JSON.stringify(userWithoutPassword));
-    } else {
-      throw new Error('Invalid credentials');
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      throw new Error(error.message);
     }
-    setIsLoading(false);
   };
 
-  const signup = async (userData: { name: string; email: string; password: string; role: UserRole }) => {
-    setIsLoading(true);
-    // Mock signup - Replace with Supabase user creation
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: userData.name,
+  const signup = async (userData: { name: string; email: string; password: string; role: UserRole; phone?: string }) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
       email: userData.email,
-      role: userData.role,
-      verified: false
-    };
-    setUser(newUser);
-    localStorage.setItem('camland_user', JSON.stringify(newUser));
-    setIsLoading(false);
+      password: userData.password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: userData.name,
+          role: userData.role,
+          phone: userData.phone
+        }
+      }
+    });
+    
+    if (error) {
+      throw new Error(error.message);
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('camland_user');
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   const isAuthenticated = !!user;
