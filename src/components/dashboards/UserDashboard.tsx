@@ -11,29 +11,41 @@ import {
   Star,
   TrendingUp,
   Building,
-  DollarSign
+  DollarSign,
+  MessageCircle,
+  Bell,
+  Home,
+  Filter,
+  ArrowRight
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const UserDashboard = () => {
+  const { user } = useAuth();
   return (
     <div className="p-6 space-y-8">
       {/* Welcome Section */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Welcome back, John!</h1>
+          <h1 className="text-3xl font-bold text-foreground">Welcome back, {user?.name || 'User'}!</h1>
           <p className="text-muted-foreground mt-1">
             Discover and explore properties across Cameroon
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button className="gap-2 bg-gradient-primary hover:opacity-90">
-            <Search className="h-4 w-4" />
-            Search Properties
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <MapPin className="h-4 w-4" />
-            View Map
-          </Button>
+          <Link to="/properties">
+            <Button className="gap-2 bg-gradient-primary hover:opacity-90">
+              <Search className="h-4 w-4" />
+              Browse Properties
+            </Button>
+          </Link>
+          <Link to="/map">
+            <Button variant="outline" className="gap-2">
+              <MapPin className="h-4 w-4" />
+              View Map
+            </Button>
+          </Link>
         </div>
       </div>
 

@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, MapPin, Eye, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, MapPin, Eye, Edit, Trash2, Phone, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import ContactModal from "@/components/property/ContactModal";
 
 interface Property {
   id: string;
@@ -20,6 +21,8 @@ interface Property {
   price: number;
   currency: string;
   verified: boolean;
+  contact_phone?: string | null;
+  contact_email?: string | null;
   created_at: string;
 }
 
@@ -40,7 +43,20 @@ const Properties = () => {
     try {
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
+        .select(`
+          id,
+          title,
+          city,
+          region,
+          property_type,
+          listing_type,
+          status,
+          price,
+          currency,
+          verified,
+          contact_phone,
+          contact_email
+        `)
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -110,7 +126,7 @@ const Properties = () => {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Properties</SelectItem>
+                <SelectItem value="all">All Properties</SelectItem>
                 <SelectItem value="available">Available</SelectItem>
                 <SelectItem value="sold">Sold</SelectItem>
                 <SelectItem value="rented">Rented</SelectItem>
@@ -175,16 +191,48 @@ const Properties = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Eye className="h-3 w-3 mr-1" />
-                        View
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="outline" className="w-auto px-2">
+                    <div className="flex items-center gap-1 mb-4">
+                      <Link to={`/properties/${property.id}`} className="flex-1">
+                        <Button size="sm" variant="outline" className="w-full">
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Details
+                        </Button>
+                      </Link>
+                      <ContactModal 
+                        property={{
+                          id: property.id,
+                          title: property.title,
+                          contact_phone: property.contact_phone,
+                          contact_email: property.contact_email,
+                          price: property.price,
+                          currency: property.currency,
+                        }}
+                      >
+                        <Button size="sm" variant="outline" className="px-2">
+                          <MessageCircle className="h-3 w-3" />
+                        </Button>
+                      </ContactModal>
+                      {property.contact_phone && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="px-2"
+                          onClick={() => window.open(`tel:${property.contact_phone}`)}
+                        >
+                          <Phone className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    {/* Admin Actions */}
+                    <div className="flex items-center gap-2 pt-2 border-t">
+                      <Link to={`/properties/${property.id}/edit`} className="flex-1">
+                        <Button size="sm" variant="ghost" className="w-full text-xs">
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      </Link>
+                      <Button size="sm" variant="ghost" className="w-auto px-2 text-xs text-red-600 hover:text-red-700">
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>

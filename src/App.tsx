@@ -13,6 +13,9 @@ import BrokerDashboard from "./components/dashboards/BrokerDashboard";
 import PropertyMapPage from "./pages/PropertyMap";
 import AddProperty from "./pages/AddProperty";
 import Properties from "./pages/Properties";
+import PropertySearch from "./pages/PropertySearch";
+import PropertyDetails from "./pages/PropertyDetails";
+import EditProperty from "./pages/EditProperty";
 import Verification from "./pages/Verification";
 import Transfers from "./pages/Transfers";
 import Auth from "./pages/Auth";
@@ -102,10 +105,35 @@ const AppContent = () => {
         </ProtectedRoute>
       } />
       
+
       <Route path="/properties" element={
         <ProtectedRoute>
           <MainLayout>
             <Properties />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/properties/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PropertyDetails />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/properties/:id/edit" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <EditProperty />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/properties/search" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PropertySearch />
           </MainLayout>
         </ProtectedRoute>
       } />

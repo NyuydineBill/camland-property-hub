@@ -24,8 +24,37 @@ const regions = [
 
 const propertyTypes = [
   "Residential House", "Apartment", "Land", "Commercial Building", 
-  "Hotel", "Guest House", "Restaurant", "Shop"
+  "Hotel", "Guest House", "Restaurant", "Shop", "Office", "Villa",
+  "Studio", "Penthouse", "Duplex", "Townhouse", "Warehouse", "Retail"
 ];
+
+// Map display names to database enum values
+const mapPropertyTypeToEnum = (displayName: string): string => {
+  const mapping: Record<string, string> = {
+    "Residential House": "house",
+    "Apartment": "apartment", 
+    "Land": "land",
+    "Commercial Building": "commercial_building",
+    "Hotel": "hotel",
+    "Guest House": "guest_house", 
+    "Restaurant": "restaurant",
+    "Shop": "shop",
+    "Office": "office",
+    "Villa": "villa",
+    "Studio": "studio",
+    "Penthouse": "penthouse", 
+    "Duplex": "duplex",
+    "Townhouse": "townhouse",
+    "Warehouse": "warehouse",
+    "Retail": "retail"
+  };
+  const mapped = mapping[displayName];
+  if (!displayName || !mapped) {
+    // fallback to a valid default or throw error
+    return "apartment"; // fallback to a safe enum value
+  }
+  return mapped;
+};
 
 const propertyStatus = [
   "Private Property", "For Sale", "For Rent", "Commercial Listing"
@@ -114,6 +143,7 @@ const AddPropertyForm = () => {
   };
 
   const handleSubmit = async () => {
+  console.log('Submitting property with type:', formData.propertyType, '->', mapPropertyTypeToEnum(formData.propertyType));
     if (!user) {
       toast({
         title: "Authentication required",
@@ -133,7 +163,7 @@ const AddPropertyForm = () => {
         city: formData.division,
         region: formData.region,
         address: `${formData.quarter}, ${formData.subDivision}, ${formData.division}`,
-        property_type: formData.propertyType.replace(/\s+/g, '_').toLowerCase() as any,
+        property_type: mapPropertyTypeToEnum(formData.propertyType),
         listing_type: formData.propertyStatus.includes('sale') ? 'sale' as const : 'rent' as const,
         status: 'available' as const,
         price: 0, // You'll need to add price field to form
@@ -343,7 +373,7 @@ const AddPropertyForm = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {propertyTypes.map((type) => (
-                      <SelectItem key={type} value={type.toLowerCase().replace(/\s+/g, '-')}>{type}</SelectItem>
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -20,6 +20,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 // Fix Leaflet default icon issue
 import L from 'leaflet';
@@ -32,113 +33,126 @@ L.Icon.Default.mergeOptions({
 
 interface Property {
   id: string;
-  type: 'private' | 'state' | 'rent' | 'sale' | 'hotel' | 'eatery' | 'conflict';
   title: string;
-  location: string;
-  coordinates: [number, number];
-  price?: string;
+  city: string;
+  region: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  price: number;
+  currency: string;
+  property_type: string;
+  listing_type: string;
   status: string;
-  publicInfo: {
-    bedrooms?: number;
-    bathrooms?: number;
-    size?: string;
-    yearBuilt?: string;
-  };
+  verified: boolean | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  area_sqm: number | null;
+  contact_email?: string | null;
 }
-
-const mockProperties: Property[] = [
-  {
-    id: "NWMZBda1GRA0023",
-    type: "private",
-    title: "Family Residence",
-    location: "Bamenda, NW Region",
-    coordinates: [6.1926, 10.1578],
-    status: "Private Property",
-    publicInfo: {
-      bedrooms: 4,
-      bathrooms: 3,
-      size: "200 sqm",
-      yearBuilt: "2018"
-    }
-  },
-  {
-    id: "NWMZBda1GRA0024", 
-    type: "sale",
-    title: "Modern Villa",
-    location: "Limbe, SW Region", 
-    coordinates: [4.0156, 9.2145],
-    price: "45,000,000 FCFA",
-    status: "For Sale",
-    publicInfo: {
-      bedrooms: 5,
-      bathrooms: 4,
-      size: "350 sqm",
-      yearBuilt: "2020"
-    }
-  },
-  {
-    id: "NWMZBda1GRA0025",
-    type: "hotel",
-    title: "Mountain View Hotel",
-    location: "Buea, SW Region",
-    coordinates: [4.1563, 9.2924],
-    price: "15,000 FCFA/night",
-    status: "Hotel",
-    publicInfo: {
-      size: "50 rooms"
-    }
-  },
-  {
-    id: "NWMZBda1GRA0026",
-    type: "rent",
-    title: "City Center Apartment",
-    location: "Douala, Littoral Region",
-    coordinates: [4.0483, 9.7043],
-    price: "250,000 FCFA/month",
-    status: "For Rent",
-    publicInfo: {
-      bedrooms: 2,
-      bathrooms: 2,
-      size: "85 sqm"
-    }
-  }
-];
-
-const propertyColors = {
-  private: '#22C55E',
-  state: '#16A34A', 
-  rent: '#EAB308',
-  sale: '#3B82F6',
-  hotel: '#8B5CF6',
-  eatery: '#F97316',
-  conflict: '#EF4444',
-};
-
-const createCustomIcon = (type: Property['type']) => {
-  const color = propertyColors[type];
-  const svgIcon = `
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="white" stroke="${color}"/>
-    </svg>
-  `;
-
-  return new Icon({
-    iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
-    popupAnchor: [0, -24]
-  });
-};
 
 const PublicPropertyMap = () => {
   const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mapLayer, setMapLayer] = useState<'street' | 'satellite'>('street');
 
-  const filteredProperties = mockProperties.filter(property =>
+  useEffect(() => {
+    fetchProperties();
+  }, []);
+
+  const fetchProperties = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null)
+        .eq('status', 'available')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProperties(data || []);
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getPropertyType = (property: Property): 'private' | 'state' | 'rent' | 'sale' | 'hotel' | 'eatery' | 'conflict' => {
+    // First check listing type for rent/sale
+    if (property.listing_type === 'rent') return 'rent';
+    if (property.listing_type === 'sale') return 'sale';
+    
+    // Then check specific property types
+    if (property.property_type === 'hotel') return 'hotel';
+    if (property.property_type === 'commercial' || property.property_type === 'office') return 'eatery';
+    if (property.property_type === 'land') return 'state';
+    
+    // Default to private for houses, apartments, villas
+    return 'private';
+  };
+
+  const propertyColors = {
+    private: '#22C55E',    // Green for private properties (houses, apartments, villas)
+    state: '#8B5A2B',      // Brown for land/state properties
+    rent: '#EAB308',       // Yellow for rental properties
+    sale: '#3B82F6',       // Blue for properties for sale
+    hotel: '#8B5CF6',      // Purple for hotels
+    eatery: '#F97316',     // Orange for commercial/office spaces
+    conflict: '#EF4444',   // Red for conflict zones
+  };
+
+  const createCustomIcon = (type: 'private' | 'state' | 'rent' | 'sale' | 'hotel' | 'eatery' | 'conflict') => {
+    const color = propertyColors[type];
+    
+    // Different icons for different property types
+    let iconPath = '';
+    switch (type) {
+      case 'private':
+        iconPath = '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'; // House
+        break;
+      case 'state':
+        iconPath = '<rect width="18" height="18" x="3" y="3" rx="2"/>'; // Land square
+        break;
+      case 'rent':
+        iconPath = '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'; // Book/contract
+        break;
+      case 'sale':
+        iconPath = '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.37 18.09"/>'; // Dollar sign circle
+        break;
+      case 'hotel':
+        iconPath = '<path d="M2 20h20M7 20V9l3-3 3 3v11M7 14h3m3 0h3"/>'; // Building
+        break;
+      case 'eatery':
+        iconPath = '<path d="M6 2v20M16 8V2M12 2v20"/>'; // Utensils/commercial
+        break;
+      default:
+        iconPath = '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'; // Default house
+    }
+    
+    const svgIcon = `
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="11" fill="${color}" stroke="white" stroke-width="2"/>
+        <g transform="translate(6, 6) scale(0.5)" fill="white" stroke="white" stroke-width="1">
+          ${iconPath}
+        </g>
+      </svg>
+    `;
+
+    return new Icon({
+      iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
+    });
+  };
+
+  const filteredProperties = properties.filter(property =>
     property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    property.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    property.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
     property.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -164,6 +178,20 @@ const PublicPropertyMap = () => {
           </div>
           
           <div className="flex gap-2">
+            <Button 
+              variant={mapLayer === 'street' ? 'default' : 'outline'} 
+              size="sm" 
+              onClick={() => setMapLayer('street')}
+            >
+              Street
+            </Button>
+            <Button 
+              variant={mapLayer === 'satellite' ? 'default' : 'outline'} 
+              size="sm" 
+              onClick={() => setMapLayer('satellite')}
+            >
+              Satellite
+            </Button>
             <Button variant="outline" size="sm" className="gap-2">
               <Filter className="h-4 w-4" />
               Filters
@@ -208,26 +236,42 @@ const PublicPropertyMap = () => {
             zoom={6}
             style={{ height: '100%', width: '100%' }}
           >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
+            {mapLayer === 'street' ? (
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+            ) : (
+              <TileLayer
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                attribution='&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+              />
+            )}
             {filteredProperties.map((property) => (
               <Marker
                 key={property.id}
-                position={property.coordinates}
-                icon={createCustomIcon(property.type)}
+                position={[property.latitude!, property.longitude!]}
+                icon={createCustomIcon(getPropertyType(property))}
               >
                 <Popup>
                   <div className="p-2">
                     <h3 className="font-semibold">{property.title}</h3>
-                    <p className="text-sm text-muted-foreground">{property.location}</p>
-                    {property.price && (
-                      <p className="text-sm font-medium text-primary mt-1">{property.price}</p>
-                    )}
+                    <p className="text-sm text-muted-foreground">{property.city}, {property.region}</p>
+                    <p className="text-sm font-medium text-primary mt-1">
+                      {property.currency} {property.price.toLocaleString()}
+                    </p>
+                    <div className="mt-2">
+                      <span className="inline-block px-2 py-1 text-xs rounded-full" 
+                            style={{ 
+                              backgroundColor: propertyColors[getPropertyType(property)], 
+                              color: 'white' 
+                            }}>
+                        {property.property_type} • {property.listing_type}
+                      </span>
+                    </div>
                     <Button 
                       size="sm" 
-                      className="mt-2"
+                      className="mt-2 w-full"
                       onClick={() => setSelectedProperty(property)}
                     >
                       View Details
@@ -246,7 +290,7 @@ const PublicPropertyMap = () => {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className="font-semibold text-lg">{selectedProperty.title}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedProperty.location}</p>
+                  <p className="text-sm text-muted-foreground">{selectedProperty.city}, {selectedProperty.region}</p>
                 </div>
                 <Button 
                   variant="ghost" 
@@ -262,8 +306,8 @@ const PublicPropertyMap = () => {
                   <Badge 
                     variant="outline"
                     style={{ 
-                      borderColor: propertyColors[selectedProperty.type],
-                      color: propertyColors[selectedProperty.type]
+                      borderColor: propertyColors[getPropertyType(selectedProperty)],
+                      color: propertyColors[getPropertyType(selectedProperty)]
                     }}
                   >
                     {selectedProperty.status}
@@ -276,41 +320,37 @@ const PublicPropertyMap = () => {
                     <p className="text-muted-foreground font-mono text-xs">{selectedProperty.id}</p>
                   </div>
 
-                  {selectedProperty.publicInfo && (
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      {selectedProperty.publicInfo.bedrooms && (
-                        <div>
-                          <span className="text-muted-foreground">Bedrooms:</span>
-                          <span className="ml-1 font-medium">{selectedProperty.publicInfo.bedrooms}</span>
-                        </div>
-                      )}
-                      {selectedProperty.publicInfo.bathrooms && (
-                        <div>
-                          <span className="text-muted-foreground">Bathrooms:</span>
-                          <span className="ml-1 font-medium">{selectedProperty.publicInfo.bathrooms}</span>
-                        </div>
-                      )}
-                      {selectedProperty.publicInfo.size && (
-                        <div>
-                          <span className="text-muted-foreground">Size:</span>
-                          <span className="ml-1 font-medium">{selectedProperty.publicInfo.size}</span>
-                        </div>
-                      )}
-                      {selectedProperty.publicInfo.yearBuilt && (
-                        <div>
-                          <span className="text-muted-foreground">Built:</span>
-                          <span className="ml-1 font-medium">{selectedProperty.publicInfo.yearBuilt}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {selectedProperty.price && (
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {selectedProperty.bedrooms && (
+                      <div>
+                        <span className="text-muted-foreground">Bedrooms:</span>
+                        <span className="ml-1 font-medium">{selectedProperty.bedrooms}</span>
+                      </div>
+                    )}
+                    {selectedProperty.bathrooms && (
+                      <div>
+                        <span className="text-muted-foreground">Bathrooms:</span>
+                        <span className="ml-1 font-medium">{selectedProperty.bathrooms}</span>
+                      </div>
+                    )}
+                    {selectedProperty.area_sqm && (
+                      <div>
+                        <span className="text-muted-foreground">Size:</span>
+                        <span className="ml-1 font-medium">{selectedProperty.area_sqm} sqm</span>
+                      </div>
+                    )}
                     <div>
-                      <p className="font-medium">Price:</p>
-                      <p className="text-lg font-semibold text-primary">{selectedProperty.price}</p>
+                      <span className="text-muted-foreground">Type:</span>
+                      <span className="ml-1 font-medium capitalize">{selectedProperty.property_type}</span>
                     </div>
-                  )}
+                  </div>
+
+                  <div>
+                    <p className="font-medium">Price:</p>
+                    <p className="text-lg font-semibold text-primary">
+                      {selectedProperty.currency} {selectedProperty.price.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="bg-muted/50 p-3 rounded-lg border border-dashed border-muted-foreground/30">
@@ -352,15 +392,15 @@ const PublicPropertyMap = () => {
               >
                 <div 
                   className="w-3 h-3 rounded-full border border-white flex-shrink-0"
-                  style={{ backgroundColor: propertyColors[property.type] }}
+                  style={{ backgroundColor: propertyColors[getPropertyType(property)] }}
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{property.title}</p>
-                  <p className="text-xs text-muted-foreground truncate">{property.location}</p>
+                  <p className="text-xs text-muted-foreground truncate">{property.city}, {property.region}</p>
                 </div>
-                {property.price && (
-                  <p className="text-xs font-medium text-primary">{property.price}</p>
-                )}
+                <p className="text-xs font-medium text-primary">
+                  {property.currency} {property.price.toLocaleString()}
+                </p>
               </div>
             ))}
           </div>

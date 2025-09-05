@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import StatsGrid from "@/components/dashboard/StatsGrid";
 import RecentActivity from "@/components/dashboard/RecentActivity";
+import NotificationCenter from "@/components/dashboard/NotificationCenter";
+import UserDashboard from "@/components/dashboards/UserDashboard";
+import BrokerDashboard from "@/components/dashboards/BrokerDashboard";
+import CommunityHeadDashboard from "@/components/dashboards/CommunityHeadDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +24,21 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Dashboard = () => {
   const { user } = useAuth();
+
+  // Render different dashboards based on user role
+  if (user?.role === 'user') {
+    return <UserDashboard />;
+  }
+  
+  if (user?.role === 'broker') {
+    return <BrokerDashboard />;
+  }
+  
+  if (user?.role === 'community') {
+    return <CommunityHeadDashboard />;
+  }
+
+  // Default dashboard for property owners and fallback
   return (
     <div className="p-6 space-y-8">
       {/* Welcome Section */}
@@ -173,8 +192,11 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      <RecentActivity />
+      {/* Notifications and Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <NotificationCenter />
+        <RecentActivity />
+      </div>
     </div>
   );
 };
