@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import UserDashboard from "./components/dashboards/UserDashboard";
 import CommunityHeadDashboard from "./components/dashboards/CommunityHeadDashboard";
 import BrokerDashboard from "./components/dashboards/BrokerDashboard";
+import AdminDashboard from "./components/dashboards/AdminDashboard";
 import PropertyMapPage from "./pages/PropertyMap";
 import AddProperty from "./pages/AddProperty";
 import Properties from "./pages/Properties";
@@ -18,6 +19,11 @@ import PropertyDetails from "./pages/PropertyDetails";
 import EditProperty from "./pages/EditProperty";
 import Verification from "./pages/Verification";
 import Transfers from "./pages/Transfers";
+import UserManagement from "./pages/UserManagement";
+import PropertyManagement from "./pages/PropertyManagement";
+import VerificationQueue from "./pages/VerificationQueue";
+import ClientManagement from "./pages/ClientManagement";
+import Appointments from "./pages/Appointments";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import PublicHeader from "./components/layout/PublicHeader";
@@ -39,6 +45,8 @@ const RoleBasedDashboard = () => {
       return <CommunityHeadDashboard />;
     case 'broker':
       return <BrokerDashboard />;
+    case 'admin':
+      return <AdminDashboard />;
     default:
       return <Dashboard />;
   }
@@ -174,6 +182,72 @@ const AppContent = () => {
         <ProtectedRoute>
           <MainLayout>
             <RoleBasedDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Broker-specific routes */}
+      <Route path="/clients" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ClientManagement />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/appointments" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Appointments />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Admin routes */}
+      <Route path="/admin" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <AdminDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin/users" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <UserManagement />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin/properties" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PropertyManagement />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin/verification" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <VerificationQueue />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin/financial" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <AdminDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin/system" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <AdminDashboard />
           </MainLayout>
         </ProtectedRoute>
       } />

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Drawer } from '@/components/ui/drawer';
+import { DrawerContent } from '@/components/ui/drawer';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -53,6 +55,9 @@ interface Property {
 const PublicPropertyMap = () => {
   const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [showSidePane, setShowSidePane] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([3.8480, 12.3547]); // Cameroon default
+  const [mapZoom, setMapZoom] = useState<number>(6);
   const [searchQuery, setSearchQuery] = useState("");
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +65,19 @@ const PublicPropertyMap = () => {
 
   useEffect(() => {
     fetchProperties();
+    // Geolocation for initial center/zoom
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setMapCenter([pos.coords.latitude, pos.coords.longitude]);
+          setMapZoom(17); // 100% zoom for user location
+        },
+        () => {
+          setMapCenter([3.8480, 12.3547]);
+          setMapZoom(6);
+        }
+      );
+    }
   }, []);
 
   const fetchProperties = async () => {
@@ -157,7 +175,10 @@ const PublicPropertyMap = () => {
   );
 
   const handleViewDetails = () => {
-    navigate('/auth');
+    // For public users, show the side pane with property details
+    if (selectedProperty) {
+      setShowSidePane(true);
+    }
   };
 
   return (
@@ -232,8 +253,8 @@ const PublicPropertyMap = () => {
         {/* Map Container */}
         <div className="absolute inset-0">
           <MapContainer
-            center={[3.8480, 12.3547]}
-            zoom={6}
+                center={mapCenter}
+                zoom={mapZoom}
             style={{ height: '100%', width: '100%' }}
           >
             {mapLayer === 'street' ? (
@@ -270,12 +291,16 @@ const PublicPropertyMap = () => {
                       </span>
                     </div>
                     <Button 
-                      size="sm" 
-                      className="mt-2 w-full"
-                      onClick={() => setSelectedProperty(property)}
-                    >
-                      View Details
-                    </Button>
+                          size="sm" 
+                          className="mt-2 w-full"
+                          onClick={() => { 
+                            console.log('View Details clicked for property:', property);
+                            setSelectedProperty(property); 
+                            setShowSidePane(true); 
+                          }}
+                        >
+                          View Details
+                        </Button>
                   </div>
                 </Popup>
               </Marker>
@@ -285,98 +310,54 @@ const PublicPropertyMap = () => {
 
         {/* Property Details Panel */}
         {selectedProperty && (
-          <Card className="absolute top-4 left-4 w-80 z-[1000] shadow-elegant">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-3">
+          <Drawer open={showSidePane} onOpenChange={(open) => { setShowSidePane(open); if (!open) setSelectedProperty(null); }}>
+            <DrawerContent className="fixed top-16 right-0 h-[calc(100vh-4rem)] w-[400px] bg-background z-20 shadow-lg flex flex-col border-l">
+              <div className="flex items-center justify-between p-4 border-b">
                 <div>
                   <h3 className="font-semibold text-lg">{selectedProperty.title}</h3>
                   <p className="text-sm text-muted-foreground">{selectedProperty.city}, {selectedProperty.region}</p>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setSelectedProperty(null)}
-                >
+                <Button variant="ghost" size="sm" onClick={() => { setSelectedProperty(null); setShowSidePane(false); }}>
                   ✕
                 </Button>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge 
-                    variant="outline"
-                    style={{ 
-                      borderColor: propertyColors[getPropertyType(selectedProperty)],
-                      color: propertyColors[getPropertyType(selectedProperty)]
-                    }}
-                  >
-                    {selectedProperty.status}
-                  </Badge>
-                </div>
-
-                <div className="text-sm space-y-2">
-                  <div>
+              <div className="p-4 overflow-y-auto flex-1">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant="outline"
+                      style={{ borderColor: propertyColors[getPropertyType(selectedProperty)], color: propertyColors[getPropertyType(selectedProperty)] }}
+                    >
+                      {selectedProperty.status}
+                    </Badge>
+                  </div>
+                  <div className="text-sm">
                     <p className="font-medium">Property ID:</p>
-                    <p className="text-muted-foreground font-mono text-xs">{selectedProperty.id}</p>
+                    <p className="text-muted-foreground font-mono">{selectedProperty.id}</p>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {selectedProperty.bedrooms && (
-                      <div>
-                        <span className="text-muted-foreground">Bedrooms:</span>
-                        <span className="ml-1 font-medium">{selectedProperty.bedrooms}</span>
-                      </div>
-                    )}
-                    {selectedProperty.bathrooms && (
-                      <div>
-                        <span className="text-muted-foreground">Bathrooms:</span>
-                        <span className="ml-1 font-medium">{selectedProperty.bathrooms}</span>
-                      </div>
-                    )}
-                    {selectedProperty.area_sqm && (
-                      <div>
-                        <span className="text-muted-foreground">Size:</span>
-                        <span className="ml-1 font-medium">{selectedProperty.area_sqm} sqm</span>
-                      </div>
-                    )}
-                    <div>
-                      <span className="text-muted-foreground">Type:</span>
-                      <span className="ml-1 font-medium capitalize">{selectedProperty.property_type}</span>
-                    </div>
-                  </div>
-
-                  <div>
+                  <div className="text-sm">
                     <p className="font-medium">Price:</p>
                     <p className="text-lg font-semibold text-primary">
                       {selectedProperty.currency} {selectedProperty.price.toLocaleString()}
                     </p>
                   </div>
-                </div>
-
-                <div className="bg-muted/50 p-3 rounded-lg border border-dashed border-muted-foreground/30">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Lock className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm font-medium text-muted-foreground">Full Details Locked</p>
+                  {/* Add more details, images, amenities, etc. here */}
+                  <div className="flex gap-2 pt-2">
+                    <Button size="sm" className="flex-1" onClick={() => window.open(`/properties/${selectedProperty.id}`, '_blank')}>
+                      Full Details
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => window.open(`mailto:${selectedProperty.contact_email}?subject=Inquiry about ${selectedProperty.title}`)}>
+                      Contact
+                    </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Sign in to view owner contact, detailed specs, photos, and more information.
-                  </p>
-                  <Button 
-                    size="sm" 
-                    className="w-full gap-2 bg-gradient-primary hover:opacity-90"
-                    onClick={handleViewDetails}
-                  >
-                    Sign In to View Details
-                    <ArrowRight className="h-3 w-3" />
-                  </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </DrawerContent>
+          </Drawer>
         )}
 
         {/* Properties List - Mobile */}
-        <div className="absolute bottom-0 left-0 right-0 bg-card border-t border-border p-4 md:hidden max-h-48 overflow-y-auto z-[1000]">
+        <div className="absolute bottom-0 left-0 right-0 bg-card border-t border-border p-4 md:hidden max-h-48 overflow-y-auto z-10">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-medium">Properties ({filteredProperties.length})</h4>
             <Button size="sm" variant="outline" onClick={() => navigate('/auth')}>

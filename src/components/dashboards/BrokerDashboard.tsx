@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Link } from "react-router-dom";
 import { 
   Briefcase, 
   DollarSign, 
@@ -16,8 +18,107 @@ import {
   MapPin,
   CheckCircle
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BrokerDashboard = () => {
+  const { user } = useAuth();
+  const [dashboardData, setDashboardData] = useState({
+    activeClients: 0,
+    propertiesManaged: 0,
+    commissionEarned: 0,
+    scheduledViewings: 0,
+    clientActivities: [],
+    commissionBreakdown: [],
+    loading: true
+  });
+
+  useEffect(() => {
+    if (user) {
+      fetchBrokerDashboardData();
+    }
+  }, [user]);
+
+  const fetchBrokerDashboardData = async () => {
+    try {
+      setDashboardData(prev => ({ ...prev, loading: true }));
+
+      // Fetch broker's managed properties (using owner_id)
+      const { data: properties, error: propertiesError } = await supabase
+        .from('properties')
+        .select(`
+          id,
+          title,
+          price,
+          currency,
+          status,
+          created_at,
+          profiles!properties_owner_id_fkey(full_name)
+        `)
+        .eq('owner_id', user.id);
+
+      if (propertiesError) throw propertiesError;
+
+      // For now, we'll simulate client data since we don't have a clients table
+      // In a real app, you'd have a separate clients table
+      const uniqueClients = new Set();
+      const clientActivities = [];
+      
+      properties?.forEach((property, index) => {
+        const clientName = `Client ${index + 1}`;
+        uniqueClients.add(clientName);
+        
+        clientActivities.push({
+          client: clientName,
+          action: "Property Registration Completed",
+          property: property.title,
+          timestamp: new Date(property.created_at).toLocaleDateString(),
+          status: property.status,
+          commission: `₣${(property.price * 0.05).toLocaleString()}` // 5% commission
+        });
+      });
+
+      // Calculate total commission (5% of all property values)
+      const totalCommission = properties?.reduce((sum, prop) => sum + (prop.price * 0.05), 0) || 0;
+
+      // Simulate scheduled viewings
+      const scheduledViewings = Math.floor(Math.random() * 10) + 1;
+
+      setDashboardData({
+        activeClients: uniqueClients.size,
+        propertiesManaged: properties?.length || 0,
+        commissionEarned: totalCommission,
+        scheduledViewings,
+        clientActivities: clientActivities.slice(0, 4), // Show latest 4
+        commissionBreakdown: properties?.map(p => ({
+          property: p.title,
+          commission: p.price * 0.05,
+          status: p.status
+        })) || [],
+        loading: false
+      });
+
+    } catch (error) {
+      console.error('Error fetching broker dashboard data:', error);
+      setDashboardData(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  if (dashboardData.loading) {
+    return (
+      <div className="p-6 space-y-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="grid grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-8">
       {/* Welcome Section */}
@@ -33,18 +134,28 @@ const BrokerDashboard = () => {
             </div>
           </div>
           <p className="text-muted-foreground mt-1">
-            Manage client properties, listings, and commissions across multiple regions
+            Register properties on behalf of owners and manage commission-based listings
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button className="gap-2 bg-gradient-primary hover:opacity-90">
-            <PlusCircle className="h-4 w-4" />
-            Add Client Property
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            Schedule Viewing
-          </Button>
+                <div className="flex flex-col sm:flex-row gap-3">
+          <Link to="/properties/add">
+            <Button className="gap-2 bg-gradient-primary hover:opacity-90">
+              <PlusCircle className="h-4 w-4" />
+              Add Property
+            </Button>
+          </Link>
+          <Link to="/appointments">
+            <Button variant="outline" className="gap-2">
+              <Calendar className="h-4 w-4" />
+              Manage Appointments
+            </Button>
+          </Link>
+          <Link to="/clients">
+            <Button variant="outline" className="gap-2">
+              <Users className="h-4 w-4" />
+              Manage Clients
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -58,9 +169,9 @@ const BrokerDashboard = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">47</div>
+            <div className="text-2xl font-bold text-foreground">{dashboardData.activeClients}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              +5 new this month
+              Active property owners
             </p>
           </CardContent>
         </Card>
@@ -73,9 +184,9 @@ const BrokerDashboard = () => {
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">89</div>
+            <div className="text-2xl font-bold text-foreground">{dashboardData.propertiesManaged}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              12 pending verification
+              Client properties
             </p>
           </CardContent>
         </Card>
@@ -83,14 +194,14 @@ const BrokerDashboard = () => {
         <Card className="hover:shadow-card-hover transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Commission Earned
+              Potential Commission
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">₣8.5M</div>
+            <div className="text-2xl font-bold text-foreground">₣{dashboardData.commissionEarned.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              +32% from last month
+              5% of property values
             </p>
           </CardContent>
         </Card>
@@ -98,14 +209,14 @@ const BrokerDashboard = () => {
         <Card className="hover:shadow-card-hover transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Success Rate
+              Scheduled Viewings
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">94.8%</div>
+            <div className="text-2xl font-bold text-foreground">{dashboardData.scheduledViewings}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Transaction success rate
+              This week
             </p>
           </CardContent>
         </Card>
@@ -116,45 +227,12 @@ const BrokerDashboard = () => {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Recent Client Activities
+              <Users className="h-5 w-5" />
+              Client Property Management
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {[
-              {
-                client: "Mr. Emmanuel Toko",
-                action: "Property Registration Completed",
-                property: "Commercial Complex in Douala",
-                timestamp: "1 hour ago",
-                status: "completed",
-                commission: "₣180,000"
-              },
-              {
-                client: "Mrs. Judith Mbang",
-                action: "Verification Request Submitted", 
-                property: "Residential Villa in Yaoundé",
-                timestamp: "3 hours ago",
-                status: "pending",
-                commission: "₣85,000"
-              },
-              {
-                client: "Dr. Francis Ngoh",
-                action: "Property Listing Created",
-                property: "Medical Center in Bamenda",
-                timestamp: "5 hours ago", 
-                status: "active",
-                commission: "₣220,000"
-              },
-              {
-                client: "Ms. Grace Ashu",
-                action: "Ownership Transfer Initiated",
-                property: "Apartment Building in Limbe",
-                timestamp: "1 day ago",
-                status: "processing",
-                commission: "₣150,000"
-              }
-            ].map((activity, index) => (
+            {dashboardData.clientActivities.length > 0 ? dashboardData.clientActivities.map((activity, index) => (
               <div key={index} className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors">
                 <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center">
                   <Users className="h-6 w-6 text-primary-foreground" />
@@ -183,12 +261,24 @@ const BrokerDashboard = () => {
                   </div>
                 </div>
 
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={() => {
+                  if (activity.contact_phone) {
+                    window.open(`tel:${activity.contact_phone}`, '_self');
+                  } else {
+                    window.open(`mailto:${activity.contact_email}`, '_self');
+                  }
+                }}>
                   <Phone className="h-3 w-3 mr-1" />
                   Contact
                 </Button>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Building className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No client properties yet</p>
+                <p className="text-sm">Add your first client property to get started</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -217,28 +307,30 @@ const BrokerDashboard = () => {
             <div className="space-y-3">
               <h4 className="font-medium">Quick Actions</h4>
               
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10">
-                <div className="w-6 h-6 bg-primary/10 rounded flex items-center justify-center">
-                  <PlusCircle className="h-3 w-3 text-primary" />
-                </div>
-                <span className="text-sm">Register for Client</span>
-              </Button>
+              <Link to="/properties/add">
+                <Button variant="ghost" className="w-full justify-start gap-3 h-10">
+                  <div className="w-6 h-6 bg-primary/10 rounded flex items-center justify-center">
+                    <PlusCircle className="h-3 w-3 text-primary" />
+                  </div>
+                  <span className="text-sm">Register for Client</span>
+                </Button>
+              </Link>
               
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-10" onClick={() => window.location.href = '/verification'}>
                 <div className="w-6 h-6 bg-success/10 rounded flex items-center justify-center">
                   <CheckCircle className="h-3 w-3 text-success" />
                 </div>
                 <span className="text-sm">Verify Properties</span>
               </Button>
               
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-10" onClick={() => window.location.href = '/map'}>
                 <div className="w-6 h-6 bg-blue-500/10 rounded flex items-center justify-center">
                   <MapPin className="h-3 w-3 text-blue-500" />
                 </div>
                 <span className="text-sm">Map View</span>
               </Button>
               
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10">
+              <Button variant="ghost" className="w-full justify-start gap-3 h-10" onClick={() => window.location.href = '/appointments'}>
                 <div className="w-6 h-6 bg-purple-500/10 rounded flex items-center justify-center">
                   <Calendar className="h-3 w-3 text-purple-500" />
                 </div>

@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Link } from "react-router-dom";
 import { 
   Users, 
   DollarSign, 
@@ -31,18 +32,22 @@ const CommunityHeadDashboard = () => {
             </div>
           </div>
           <p className="text-muted-foreground mt-1">
-            Manage community endorsements and earn commissions from verified properties
+            Provide consent privileges for property registrations and earn endorsement commissions
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button className="gap-2 bg-gradient-primary hover:opacity-90">
-            <Handshake className="h-4 w-4" />
-            Endorse Property
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <MapPin className="h-4 w-4" />
-            Community Map
-          </Button>
+          <Link to="/verification">
+            <Button className="gap-2 bg-gradient-primary hover:opacity-90">
+              <Handshake className="h-4 w-4" />
+              Endorse Property
+            </Button>
+          </Link>
+          <Link to="/map">
+            <Button variant="outline" className="gap-2">
+              <MapPin className="h-4 w-4" />
+              Community Map
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -169,10 +174,16 @@ const CommunityHeadDashboard = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button size="sm" className="bg-gradient-success hover:opacity-90">
+                  <Button size="sm" className="bg-gradient-success hover:opacity-90" onClick={() => {
+                    // Add approval functionality here
+                    alert(`Approving endorsement ${endorsement.id}`);
+                  }}>
                     Approve
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" onClick={() => {
+                    // Add review functionality here
+                    alert(`Reviewing endorsement ${endorsement.id}`);
+                  }}>
                     Review
                   </Button>
                 </div>
@@ -209,26 +220,32 @@ const CommunityHeadDashboard = () => {
             <div className="space-y-3">
               <h4 className="font-medium">Quick Actions</h4>
               
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10">
-                <div className="w-6 h-6 bg-primary/10 rounded flex items-center justify-center">
-                  <Handshake className="h-3 w-3 text-primary" />
-                </div>
-                <span className="text-sm">Bulk Endorsement</span>
-              </Button>
+              <Link to="/verification">
+                <Button variant="ghost" className="w-full justify-start gap-3 h-10">
+                  <div className="w-6 h-6 bg-primary/10 rounded flex items-center justify-center">
+                    <Handshake className="h-3 w-3 text-primary" />
+                  </div>
+                  <span className="text-sm">Bulk Endorsement</span>
+                </Button>
+              </Link>
               
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10">
-                <div className="w-6 h-6 bg-success/10 rounded flex items-center justify-center">
-                  <CheckCircle className="h-3 w-3 text-success" />
-                </div>
-                <span className="text-sm">Commission Report</span>
-              </Button>
+              <Link to="/commissions">
+                <Button variant="ghost" className="w-full justify-start gap-3 h-10">
+                  <div className="w-6 h-6 bg-success/10 rounded flex items-center justify-center">
+                    <CheckCircle className="h-3 w-3 text-success" />
+                  </div>
+                  <span className="text-sm">Commission Report</span>
+                </Button>
+              </Link>
               
-              <Button variant="ghost" className="w-full justify-start gap-3 h-10">
-                <div className="w-6 h-6 bg-blue-500/10 rounded flex items-center justify-center">
-                  <MapPin className="h-3 w-3 text-blue-500" />
-                </div>
-                <span className="text-sm">Community Boundaries</span>
-              </Button>
+              <Link to="/community">
+                <Button variant="ghost" className="w-full justify-start gap-3 h-10">
+                  <div className="w-6 h-6 bg-blue-500/10 rounded flex items-center justify-center">
+                    <MapPin className="h-3 w-3 text-blue-500" />
+                  </div>
+                  <span className="text-sm">Community Boundaries</span>
+                </Button>
+              </Link>
             </div>
 
             <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
@@ -239,9 +256,11 @@ const CommunityHeadDashboard = () => {
                   <p className="text-xs text-muted-foreground mt-1">
                     Next payout: ₣450,000 on March 1st
                   </p>
-                  <Button size="sm" className="mt-3 bg-gradient-primary hover:opacity-90">
-                    View Details
-                  </Button>
+                  <Link to="/commissions">
+                    <Button size="sm" className="mt-3 bg-gradient-primary hover:opacity-90">
+                      View Details
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>

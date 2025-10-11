@@ -39,6 +39,13 @@ const accountTypes = [
     description: "Professional property services",
     icon: Briefcase,
     color: "bg-orange-500"
+  },
+  {
+    id: "admin",
+    title: "System Administrator",
+    description: "Full platform management and control",
+    icon: Shield,
+    color: "bg-red-500"
   }
 ];
 
@@ -100,6 +107,24 @@ const LoginForm = () => {
       });
       return;
     }
+
+    if (!formData.name.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Name required",
+        description: "Please enter your full name.",
+      });
+      return;
+    }
+
+    if (!selectedAccountType) {
+      toast({
+        variant: "destructive",
+        title: "Account type required",
+        description: "Please select an account type.",
+      });
+      return;
+    }
     
     setIsLoading(true);
     
@@ -114,8 +139,11 @@ const LoginForm = () => {
       
       toast({
         title: "Account created!",
-        description: "Please check your email to verify your account.",
+        description: "Welcome to CamLand Property Hub!",
       });
+      
+      // Navigate to dashboard after successful signup
+      navigate('/dashboard');
     } catch (error) {
       toast({
         variant: "destructive",

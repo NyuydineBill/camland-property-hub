@@ -1,0 +1,154 @@
+# CamLand Property Management Platform - Development Prompt
+
+Create a comprehensive, professional property management web application called "CamLand" with the following specifications:
+
+## Design Requirements
+- **Primary Color**: Green (#22C55E or similar professional green)
+- **Secondary Color**: White (#FFFFFF)
+- **Style**: Modern, clean, professional interface with intuitive navigation
+- **Layout**: Responsive design that works seamlessly on desktop, tablet, and mobile
+- **Typography**: Clean, readable fonts (Inter, Roboto, or similar)
+
+## Core Features & Functionality
+
+### 1. User Authentication System
+Create four distinct account types with role-based access:
+- **User Account** (Unverified/Verified): Basic property viewing and limited commercial engagement
+- **Owner Account**: Full property registration, management, and commercial listing capabilities
+- **Community Head Account**: Additional consent privileges and commission earning
+- **Real Estate Broker Account**: Property registration on behalf of owners, commission-based listings
+
+**Account Creation Flow:**
+- Simple registration: Name, email, phone number
+- Email/phone verification via OTP
+- Account verification process requiring NID/Passport, photo ID, and selfie upload
+- Secure login with password/PIN options and password recovery
+
+### 2. Interactive Property Map Interface
+- **Main Dashboard**: Satellite map view of Cameroon with color-coded property pins
+- **Pin Color System**:
+  - Private Properties: [Green shade]
+  - State Properties: [Different green shade]
+  - House on Rent: [Distinct color]
+  - House on Sale: [Distinct color]
+  - Land on Rent: [Distinct color]
+  - Land on Sale: [Distinct color]
+  - Hotels: [Distinct color]
+  - Guest Houses: [Distinct color]
+  - Eateries: [Distinct color]
+  - Conflict Zones: [Red/Warning color]
+- **Property ID System**: Auto-generated IDs based on location (e.g., NWMZBda1GRA0023)
+
+### 3. Property Registration System
+**Registration Form with sections:**
+- Personal Information (Name, email, contacts, NID/Passport)
+- Property Information (Region, Division, Sub-Division, Quarter, dimensions, coordinates)
+- Property Documents (Upload scanned copies)
+- Property Status selection
+- Property Photos/Videos upload
+- Next of Kin Information (Optional)
+- Terms & Conditions acceptance
+
+**Features:**
+- Multi-property registration for single owners
+- Document fraud verification alerts
+- Blockchain integration indicators
+- Conflict resolution system for disputed properties
+
+### 4. Property Verification System
+- **Paid verification service** accessible to any user
+- **Verification badge system** for authenticated properties
+- **Conflict zone marking** for disputed properties
+- **Partnership integration** with NWRA, MINAT, MINCAF, MINDHU, MINDDEVEL
+- **Express verification** options (≤3 days) at premium pricing
+- **Re-verification** capability for already verified properties
+
+### 5. Commercial Listings Management
+**Property Listing Features:**
+- Commercial status toggle (Owner/Delegate only)
+- Rich media uploads (photos, videos)
+- Detailed specifications display
+- Alternative contact information option
+- Administrative delegation system
+- Pricing and payment terms setup
+
+**Engagement System:**
+- **Free viewing** for basic property info
+- **Paid access** to owner contact information
+- **Commission tracking** for successful transactions
+- **Payment gateway integration** for fees and commissions
+
+### 6. Advanced Search & Filter System
+Implement robust search with filters for:
+- Location (Region → Division → Sub-Division → Quarter)
+- Property type (House, Land, Hotel, etc.)
+- Price range
+- Property status (Rent, Sale, etc.)
+- Verification status
+- Property features and amenities
+
+### 7. Ownership Transfer System
+**Three transfer types:**
+1. **Sales Transfer**: Requires sales certificate, property documents, OTP verification
+2. **Friendly/Cashless Transfer**: Requires police station agreement, OTP verification
+3. **Next of Kin Transfer**: Requires death certificate, will, legal documentation
+
+**Features:**
+- Online and offline transfer options
+- Delegation system for representatives
+- 3-day processing timeframe
+- Automatic access transfer upon completion
+- Commission calculation and collection
+
+### 8. Notification & Communication System
+- Real-time notifications for property activities
+- Email and SMS alerts
+- In-app messaging system
+- Transaction status updates
+- Verification completion notices
+
+### 9. Security Features
+- Multi-factor authentication (Password, PIN, OTP)
+- Blockchain technology integration indicators
+- Document fraud verification alerts
+- Activity tracking and audit logs
+- Secure payment processing
+
+### 10. Commission & Payment System
+- Automated commission calculation
+- Payment tracking for all stakeholders
+- Financial institution integration
+- Secure transaction processing
+- Revenue sharing for Community Heads and Brokers
+
+### 11. Community Recommendation System
+- Neighbor-backed property registrations
+- Community consensus features
+- Trust score indicators
+- Referral commission tracking
+
+## Technical Requirements
+- **Frontend**: Modern React/Vue.js with responsive design
+- **Backend**: Secure API with role-based access control
+- **Database**: Structured for easy property traceability
+- **Map Integration**: Interactive map with custom markers
+- **File Upload**: Secure document and media handling
+- **Payment Gateway**: Integrated payment processing
+- **Mobile Responsive**: Seamless mobile experience
+
+## User Experience Focus
+- **Intuitive Navigation**: Clear menu structure and breadcrumbs
+- **Progressive Disclosure**: Show relevant information based on user type
+- **Visual Hierarchy**: Use green color scheme effectively for CTAs and important elements
+- **Loading States**: Smooth transitions and loading indicators
+- **Error Handling**: User-friendly error messages and fallbacks
+- **Accessibility**: WCAG compliant design
+
+## Additional Features
+- **Dashboard Analytics**: Property performance metrics
+- **Document Management**: Organized file storage and retrieval
+- **Multi-language Support**: French and English options
+- **Help Center**: Comprehensive FAQ and support system
+- **Admin Panel**: Complete system management interface
+
+Create this as a complete, functional web application that prioritizes user experience, security, and professional appearance. The platform should feel modern, trustworthy, and efficient for all user types while maintaining the green and white color scheme throughout.

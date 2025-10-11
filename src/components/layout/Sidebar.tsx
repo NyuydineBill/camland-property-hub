@@ -12,7 +12,13 @@ import {
   Settings,
   ChevronDown,
   Home,
-  Building
+  Building,
+  UserCog,
+  Database,
+  BarChart3,
+  CheckCircle,
+  Banknote,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,62 +28,191 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const navigation = [
-  {
-    title: "Dashboard",
-    href: "/",
-    icon: LayoutDashboard,
-    badge: null,
-  },
-  {
-    title: "Property Map",
-    href: "/map", 
-    icon: MapPin,
-    badge: null,
-  },
-  {
-    title: "Properties",
-    icon: Building,
-    children: [
-      { title: "My Properties", href: "/properties", badge: "12" },
-      { title: "Add Property", href: "/properties/add", badge: null },
-      { title: "Property Search", href: "/properties/search", badge: null },
-    ]
-  },
-  {
-    title: "Verification",
-    href: "/verification",
-    icon: Shield,
-    badge: "3",
-  },
-  {
-    title: "Transfers", 
-    href: "/transfers",
-    icon: RefreshCw,
-    badge: "1",
-  },
-  {
-    title: "Commissions",
-    href: "/commissions", 
-    icon: DollarSign,
-    badge: null,
-  },
-  {
-    title: "Community",
-    href: "/community",
-    icon: Users,
-    badge: null,
-  },
-];
+// Navigation items based on user role
+const getNavigationItems = (userRole?: string) => {
+  const baseNavigation = [
+    {
+      title: "Dashboard",
+      href: "/",
+      icon: LayoutDashboard,
+      badge: null,
+    },
+    {
+      title: "Property Map",
+      href: "/map", 
+      icon: MapPin,
+      badge: null,
+    },
+  ];
+
+  const userNavigation = [
+    ...baseNavigation,
+    {
+      title: "Properties",
+      icon: Building,
+      children: [
+        { title: "Browse Properties", href: "/properties", badge: null },
+        { title: "Property Search", href: "/properties/search", badge: null },
+      ]
+    },
+  ];
+
+  const ownerNavigation = [
+    ...baseNavigation,
+    {
+      title: "Properties",
+      icon: Building,
+      children: [
+        { title: "My Properties", href: "/properties", badge: "12" },
+        { title: "Add Property", href: "/properties/add", badge: null },
+        { title: "Property Search", href: "/properties/search", badge: null },
+      ]
+    },
+    {
+      title: "Verification",
+      href: "/verification",
+      icon: Shield,
+      badge: "3",
+    },
+    {
+      title: "Transfers", 
+      href: "/transfers",
+      icon: RefreshCw,
+      badge: "1",
+    },
+  ];
+
+  const brokerNavigation = [
+    ...baseNavigation,
+    {
+      title: "Client Properties",
+      icon: Building,
+      children: [
+        { title: "Manage Client Properties", href: "/properties", badge: "24" },
+        { title: "Add Client Property", href: "/properties/add", badge: null },
+        { title: "Property Search", href: "/properties/search", badge: null },
+      ]
+    },
+    {
+      title: "Client Management",
+      href: "/clients",
+      icon: Users,
+      badge: "12",
+    },
+    {
+      title: "Commissions",
+      href: "/commissions", 
+      icon: DollarSign,
+      badge: null,
+    },
+    {
+      title: "Appointments",
+      href: "/appointments",
+      icon: Calendar,
+      badge: "3",
+    },
+  ];
+
+  const communityNavigation = [
+    ...baseNavigation,
+    {
+      title: "Community",
+      href: "/community",
+      icon: Users,
+      badge: null,
+    },
+    {
+      title: "Property Endorsements",
+      href: "/verification",
+      icon: Shield,
+      badge: "8",
+    },
+    {
+      title: "Commission Tracking",
+      href: "/commissions", 
+      icon: DollarSign,
+      badge: null,
+    },
+  ];
+
+  const adminNavigation = [
+    {
+      title: "Admin Dashboard",
+      href: "/admin",
+      icon: LayoutDashboard,
+      badge: null,
+    },
+    {
+      title: "User Management",
+      icon: UserCog,
+      children: [
+        { title: "All Users", href: "/admin/users", badge: "2.1K" },
+        { title: "User Verification", href: "/admin/users/verification", badge: "45" },
+        { title: "Role Management", href: "/admin/users/roles", badge: null },
+      ]
+    },
+    {
+      title: "Property Management",
+      icon: Building,
+      children: [
+        { title: "All Properties", href: "/admin/properties", badge: "10.5K" },
+        { title: "Verification Queue", href: "/admin/verification", badge: "127" },
+        { title: "Flagged Properties", href: "/admin/properties/flagged", badge: "23" },
+      ]
+    },
+    {
+      title: "Financial Management",
+      icon: Banknote,
+      children: [
+        { title: "Revenue Overview", href: "/admin/financial", badge: null },
+        { title: "Commission Payouts", href: "/admin/financial/payouts", badge: "15" },
+        { title: "Transaction Monitoring", href: "/admin/financial/transactions", badge: null },
+      ]
+    },
+    {
+      title: "System Management",
+      icon: Database,
+      children: [
+        { title: "System Health", href: "/admin/system", badge: null },
+        { title: "Security Logs", href: "/admin/system/security", badge: "3" },
+        { title: "Platform Settings", href: "/admin/system/settings", badge: null },
+      ]
+    },
+    {
+      title: "Analytics",
+      href: "/admin/analytics",
+      icon: BarChart3,
+      badge: null,
+    },
+  ];
+
+  switch (userRole) {
+    case 'user':
+      return userNavigation;
+    case 'owner':
+      return ownerNavigation;
+    case 'broker':
+      return brokerNavigation;
+    case 'community':
+      return communityNavigation;
+    case 'admin':
+      return adminNavigation;
+    default:
+      return ownerNavigation;
+  }
+};
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+  const { user } = useAuth();
   const [openGroups, setOpenGroups] = useState<string[]>(["Properties"]);
+  const navigation = getNavigationItems(user?.role);
 
   const toggleGroup = (title: string) => {
     setOpenGroups(prev =>

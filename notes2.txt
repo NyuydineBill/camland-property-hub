@@ -1,0 +1,147 @@
+CamLand User Account Features
+CamLand User Account can exist as an unverified account or a verified account and can be
+created by any member of the public. Upon creation the account exists as an unverified
+account but can be verified if the user wishes to do so. All CamLand accounts must have a
+unique ID for better security.
+Unverified User Account:
+An unverified user account has the following privileges:
+• View all property listings
+• Engage commercial listings on House and Land Rents, Hotels, Guest House, and
+Eateries
+• Request for property verification status for other properties.
+On the other hand, an unverified user account has the following limitations
+• Can only see House and Land sale listings but cannot engage them. User will be
+required to verify their accounts to continue
+• Cannot register any newly acquired real estate property
+Verified User Account:
+A verified user account has the following privileges:
+• View all property listings
+• Engage all commercial listings
+• Request for property verification status for other properties
+• Register any newly acquired real estate property or receive property transferred to
+their accounts
+• Upon payment of a property engagement fee, the user has the possibility to delegate
+powers to another user of a verified CamLand Account to mediate the acquisition of a
+new real estate property of theirs on their behalf.
+NB: A user account can be upgraded to any CamLand account type (Owner Account,
+Community Head Account and Broker Account) and equally any CamLand Account type can
+be downgraded to a user account. For example, in the case where a user with a user account
+acquires a real estate property and register’s it to their account by providing the necessary
+documents, the user account is automatically upgraded to a user account upon validation of
+the submitted documents by CamLand and in the case where an owner with an owner’s
+account sale their property and has no other property registered to his/her account, the
+account is automatically downgraded to a user account. So, all accounts can be downgraded
+to a user account.
+To verify a user account, the user needs to provide CamLand with the following information:
+Personal Information:
+Name
+Email (to be verified)
+Contact(s) (to be verified)
+NID or Passport Number
+Picture of Identification Document
+Selfie Picture
+CamLand Owner Account Features
+A CamLand Owner Account can either be created upon registration of account or by
+upgrading a User account upon registration of a property, hence available only for property
+owners. This account MUST be verified and have a property registered to their accounts for it
+to exist. An Owner’s account has the following privileges:
+• View all property listings
+• Engage all commercial listings
+• Register any newly acquired real estate property or receive property transferred to
+their accounts
+• Upon payment of a property engagement fee, the user has the possibility to delegate
+powers to another user of a verified CamLand Account to mediate the acquisition of a
+new real estate property of theirs on their behalf.
+• Request for property verification status for their property and other properties
+• Give consent about other owners registering their properties near theirs and earn
+commissions (Vouching) based on their credit score.
+• Delegate powers to another user with a verified CamLand account to mediate the sale
+of their properties on the behalf.
+• List their property as private or commercial
+• Initiate an ownership transfer request
+To register a property to CamLand, the Owner must provide CamLand with the following
+information:
+Personal Information:
+Name
+Email (to be verified)
+Contact(s) (to be verified)
+NID or Passport Number
+Picture of Identification Document
+Selfie
+Property Information:
+Region
+Division
+Sub-Division
+Quarter
+Property Dimensions
+Geographical Coordinate
+Property Document (Upload Scanned Copy)
+Property Status
+Pictures of the Property
+Next of Kin Information (Optional):
+Name
+NID or Passport
+Phone Number
+Picture
+Picture of Identification Document
+Scanned Copy of Birth Certificate
+NB: Optionally decision about property in case of demise
+Owner must accept CamLand terms and conditions in order for their registration to go through
+(Terms and Conditions to be developed). Upon registration the said property is listed against
+the owner account and is assigned a unique property ID by CamLand.
+NB: More than one property can be registered under on account but one property cannot be
+registered to more than one account unless in the case of inheritance and the specificities
+governing the will, court order or any relevant legal document must be highlighted upon
+registration and such properties cannot be sold without the consent of both parties.
+CamLand Community Head Account Features
+A CamLand Community Head Account can either be created upon registration of account or
+by upgrading a User account upon provision of authentic supporting documents and
+validation by CamLand. This account can only be owned by community heads like “Quarter
+Heads”, Fons/Chiefs, MINCAF’s Sub-Divisional Representatives, and Council delegates.
+This account must be verified and has the following privileges:
+• View all property listings
+• Engage all commercial listings
+• Register any newly acquired real estate property or receive property transferred to
+their accounts
+• Upon payment of a property engagement fee, the user has the possibility to delegate
+powers to another user of a verified CamLand Account to mediate the acquisition of a
+new real estate property of theirs on their behalf.
+• Request for property verification status for their property (if user owns a real estate
+property) and other properties
+• Delegate powers to another user with a verified CamLand account to mediate the sale
+of their properties on the behalf (If user owns a real estate property)
+• List their property as private or commercial (If user owns a real estate property)
+• Initiate an ownership transfer request (If user owns a real estate property)
+• Give consent about other owners registering their properties in their community and
+earn commissions (Vouching) based on their credit score.
+NB: A Community Head Account Owner can equally have their properties registered to their
+accounts such that they use one account for everything.
+The documents needed by CamLand to validate a Community Account creation request is
+letter of designation or recognition by a competent authority.
+CamLand Broker’s Account Features
+A CamLand Broker Account can either be created upon registration of account or by
+upgrading a User account upon provision of authentic supporting documents and validation
+by CamLand. This account can only be owned by licensed real estate agents . This account
+must be verified and has the following privileges:
+• View all property listings
+• Engage all commercial listings
+• Register any newly acquired real estate property or receive property transferred to
+their accounts
+• Upon payment of a property engagement fee, the user has the possibility to delegate
+powers to another user of a verified CamLand Account to mediate the acquisition of a
+new real estate property of theirs on their behalf.
+• Request for property verification status for their property (if user owns a real estate
+property) and other properties
+• Delegate powers to another user with a verified CamLand account to mediate the sale
+of their properties on the behalf (If user owns a real estate property)
+• List their property as private or commercial (If user owns a real estate property)
+• Initiate an ownership transfer request (If user owns a real estate property)
+• Give consent about other owners registering their properties in their community and
+earn commissions (Vouching) based on their credit score.
+• Register properties on behalf of owner’s an earn a commission
+• List other property owner’s properties as commercial upon approval by owner and
+earn a commission upon sale of that property
+NB: An Owner of a Broker Account can equally have their properties registered to their
+accounts such that they use one account for everything.
+The documents needed by CamLand to validate a Broker Account creation request is a real
+estate agent license signed by a competent authority.

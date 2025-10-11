@@ -166,7 +166,7 @@ const UserDashboard = () => {
             <Search className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Link to="/properties/search">
+            <Link to="/search">
               <Button variant="outline" size="sm" className="w-full">
                 Start Searching
               </Button>
@@ -297,7 +297,7 @@ const UserDashboard = () => {
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {['Houses in Douala', 'Apartments in Yaoundé', 'Commercial Properties', 'Land for Sale', 'Luxury Villas'].map((search) => (
-              <Link key={search} to={`/properties/search?q=${encodeURIComponent(search)}`}>
+              <Link key={search} to={`/search?q=${encodeURIComponent(search)}`}>
                 <Badge variant="secondary" className="hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer">
                   {search}
                 </Badge>

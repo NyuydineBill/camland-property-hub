@@ -29,7 +29,7 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 sticky top-0 z-50 backdrop-blur-sm bg-card/95">
+    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 sticky top-0 z-[100] backdrop-blur-sm bg-card/95">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -62,7 +62,7 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative z-[105]">
           <Bell className="h-5 w-5" />
           <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs bg-property-conflict">
             3
@@ -71,7 +71,7 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2">
+            <Button variant="ghost" className="gap-2 z-[105]">
               <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
                 <User className="h-4 w-4 text-primary-foreground" />
               </div>
@@ -81,7 +81,7 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 z-[110]">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile Settings</DropdownMenuItem>
